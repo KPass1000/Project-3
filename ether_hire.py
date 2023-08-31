@@ -7,24 +7,17 @@ from dataclasses import dataclass
 from typing import Any, List
 from web3 import Web3
 import os
-
+from crypto_wallet import generate_account, get_balance, send_transaction
+import pandas as pd
+import requests
 w3 = Web3(Web3.HTTPProvider("HTTP://127.0.0.1:7545"))
-################################################################################
-
 
 print("Current Working Directory:", os.getcwd())
 
-# Import the following functions from the `crypto_wallet.py` file:
-import streamlit as st
-from crypto_wallet import generate_account, get_balance, send_transaction
-from web3 import Web3
-import pandas as pd
-
-
 ################################################################################
 
-# Database of KryptoJobs2Go candidates including their name, digital address, rating and hourly cost per Ether.
-# (A single Ether is currently determined in the program as well.)
+# Database of Ether Hire candidates including their name, digital address, rating and hourly cost per Ether.
+# (A single Ether is determined in real time within the program as well.)
 candidate_database = {
     "Henry": [
         "Henry",
@@ -56,13 +49,12 @@ candidate_database = {
     ],
 }
 
-# A list of the KryptoJobs2Go candidates first names
+# A list of the Ether Hire candidates first names
 people = ["Henry", "Ash", "Jo", "Kendall"]
-
 
 def get_people(filtered_candidates):
     """Display the database of EtherHire candidate information."""
-    # db_list = list(filtered_candidates.values())
+    
     db_list = list(candidate_database.values())
 
     # Get the absolute path of the current directory
@@ -85,27 +77,18 @@ def get_people(filtered_candidates):
             st.write("Rate this candidate:")
             stars = st.slider("", 0, 5, int(float(db_list[number][2])), key=f"{db_list[number][0]}_rating")
             st.write("Rating:", stars, "stars")
-
             st.write("Hourly Rate per Ether: ", db_list[number][3], "eth")
             st.text(" \n")
             st.markdown("---")
-
 
 ################################################################################
 # Streamlit Code
 
 # Streamlit application headings
-# Streamlit application headings with blue font color
-
-# Streamlit application headings
 st.markdown("<h1 style='color: blue;'>Welcome to Ether Hire!</h1>", unsafe_allow_html=True)
 st.markdown("<h2 style='color: blue;'>Fueling Your Fintech Team</h2>", unsafe_allow_html=True)
 
-################################################################################
-# Streamlit Sidebar Code
-
 #Fetch Current Price of Etherium
-import requests
 
 def get_eth_price():
     url = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
@@ -142,26 +125,23 @@ hours = st.sidebar.number_input("Number of Hours", key="hours_input1")
 
 st.sidebar.markdown("## Candidate Name, Hourly Rate, and Ethereum Address")
 
-# Identify the FinTech Hire candidate
+# Identify the candidate
 candidate = candidate_database[person][0]
 
-# Write the KryptoJobs2Go candidate's name to the sidebar
+# Write the Ether Hire candidate's name to the sidebar
 st.sidebar.write(candidate)
 
-# Identify the KryptoJobs2Go candidate's hourly rate
+# Identify the Ether Hire candidate's hourly rate
 hourly_rate = candidate_database[person][3]
 
-# Write the inTech Finder candidate's hourly rate to the sidebar
+# Write the FinTech Finder candidate's hourly rate to the sidebar
 st.sidebar.write(hourly_rate)
 
-# Identify the KryptoJobs2Go candidate's Ethereum Address
+# Identify the Ether Hire candidate's Ethereum Address
 candidate_address = candidate_database[person][1]
 
-# Write the inTech Finder candidate's Ethereum Address to the sidebar
+# Write the candidate's Ethereum Address to the sidebar
 st.sidebar.write(candidate_address)
-
-# Write the KryptoJobs2Go candidate's name to the sidebar
-
 st.sidebar.markdown("## Total Wage in Ether")
 
 ################################################################################
@@ -174,7 +154,6 @@ def calculate_wage(hourly_rate, hours):
 def pay_candidate(account, candidate_address, wage):
     try:
         # Send the transaction
-        
         transaction_hash = send_transaction(w3, account, candidate_address, wage)
 
         # Display the transaction hash in the Streamlit web interface
