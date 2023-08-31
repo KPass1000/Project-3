@@ -18,9 +18,10 @@ print("Current Working Directory:", os.getcwd())
 import streamlit as st
 from crypto_wallet import generate_account, get_balance, send_transaction
 from web3 import Web3
+import pandas as pd
+
 
 ################################################################################
-# KryptoJobs2Go Candidate Information
 
 # Database of KryptoJobs2Go candidates including their name, digital address, rating and hourly cost per Ether.
 # (A single Ether is currently determined in the program as well.)
@@ -28,30 +29,30 @@ candidate_database = {
     "Henry": [
         "Henry",
         "0xc4F8e5023c772bc76bDfc22DEbAC4DC78041fE64",
-        "4.3",
+        4.3,
         0.20,
-        "lane.jpeg",
+        "henryy.jpeg",
     ],
-    "Ash": [
-        "Ash",
+    "Timothy": [
+        "Timothy",
         "0x0fa99ABaD643e6c00AF22f658c05b5Fd632C1272",
-        "5.0",
+        5.0,
         0.33,
-        "ash.jpeg",
+        "timothy.jpeg",
     ],
-    "Jo": [
-        "Jo",
+    "David": [
+        "David",
         "0xD22F65E6d92CE6CFA95912A3fe19C493DD5b5b5e",
-        "4.7",
+        4.7,
         0.19,
-        "jo.jpeg",
+        "david.jpeg",
     ],
-    "Kendall": [
-        "Kendall",
+    "Mary": [
+        "Mary",
         "0x74e8bD6D2BbA93Af291fbbDF38430e00944a7eF6",
-        "4.1",
+        4.1,
         0.16,
-        "kendall.jpeg",
+        "mary.jpeg",
     ],
 }
 
@@ -59,39 +60,46 @@ candidate_database = {
 people = ["Henry", "Ash", "Jo", "Kendall"]
 
 
-def get_people():
-    """Display the database of KryptoJobs2Go candidate information."""
+def get_people(filtered_candidates):
+    """Display the database of EtherHire candidate information."""
+    # db_list = list(filtered_candidates.values())
     db_list = list(candidate_database.values())
 
     # Get the absolute path of the current directory
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     for number in range(len(people)):
-        # Construct the absolute path to the image file
-        image_path = os.path.join(current_dir, db_list[number][4])
+        if db_list[number][0] in filtered_candidates["Name"]:
+            
+            # Construct the absolute path to the image file
+            image_path = os.path.join(current_dir, db_list[number][4])
 
-        # Display the image
-        st.image(image_path, width=200)
-        st.write("Name: ", db_list[number][0])
-        st.write("Ethereum Account Address: ", db_list[number][1])
-        st.write("KryptoJobs2Go Rating: ", db_list[number][2])
+            # Display the image
+            st.image(image_path, width=200)
+            st.write("Name: ", db_list[number][0])
+            st.write("Ethereum Account Address: ", db_list[number][1])
+            st.write("EtherHire: ", db_list[number][2])
+
         
-         # Display star rating using Streamlit's slider
-        st.write("Rate this candidate:")
-        stars = st.slider("", 0, 5, int(float(db_list[number][2])), key=f"{db_list[number][0]}_rating")
-        st.write("Rating:", stars, "stars")
-        
-        st.write("Hourly Rate per Ether: ", db_list[number][3], "eth")
-        st.text(" \n")
+             # Display star rating using Streamlit's slider
+            st.write("Rate this candidate:")
+            stars = st.slider("", 0, 5, int(float(db_list[number][2])), key=f"{db_list[number][0]}_rating")
+            st.write("Rating:", stars, "stars")
+
+            st.write("Hourly Rate per Ether: ", db_list[number][3], "eth")
+            st.text(" \n")
+            st.markdown("---")
 
 
 ################################################################################
 # Streamlit Code
 
 # Streamlit application headings
-st.markdown("# Ether Hire")
-st.markdown("## Fueling Your Fintech Team!")
-st.text(" \n")
+# Streamlit application headings with blue font color
+
+# Streamlit application headings
+st.markdown("<h1 style='color: blue;'>Welcome to Ether Hire!</h1>", unsafe_allow_html=True)
+st.markdown("<h2 style='color: blue;'>Fueling Your Fintech Team</h2>", unsafe_allow_html=True)
 
 ################################################################################
 # Streamlit Sidebar Code
@@ -114,6 +122,7 @@ st.sidebar.markdown("## Client Account Address and Ethernet Balance in Ether")
 account = generate_account(w3)
 
 ##########################################
+
 
 # Write the client's Ethereum account address to the sidebar
 st.sidebar.write(account.address)
@@ -192,11 +201,36 @@ if st.sidebar.button("Send Transaction", key="send_button1"):
 
     # Celebrate your successful payment
     st.balloons()
+    
+    # Text stating "All transactions are displayed in Ganache.
+    st.markdown("---")
+st.text("All transactions are displayed in Ganache.")
 
+st.markdown("---")
 
-# The function that starts the Streamlit application
-# Writes KryptoJobs2Go candidates to the Streamlit page
-get_people()
+# Convert candidate database dictionary to DataFrame
+df = pd.DataFrame.from_dict(candidate_database, orient='index', columns=['Name', 'Address', 'Rating', 'Hourly Rate', 'Image'])
+
+# Add filter options for rating and hourly rate
+min_rating = st.slider("Minimum Rating", 0.0, 5.0, 0.0)
+max_hourly_rate = st.slider("Maximum Hourly Rate", 0.0, 1.0, 1.0)
+
+# Apply filters
+filtered_candidates = df[(df['Rating'] >= min_rating) & (df['Hourly Rate'] <= max_hourly_rate)]
+
+# Display filtered candidates
+if not filtered_candidates.empty:
+    st.write("Filtered Candidates:")
+    st.dataframe(filtered_candidates)
+else:
+    st.write("No candidates match the selected filters.")
+
+# Create a bar chart of candidate ratings
+st.bar_chart(df['Rating'])
+
+# Prints all data about candidates
+get_people(filtered_candidates)
+
 
 ################################################################################
 
